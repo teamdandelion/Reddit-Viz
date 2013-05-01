@@ -1,0 +1,5 @@
+
+
+def GetDataDict(subredditName):
+	pass
+
