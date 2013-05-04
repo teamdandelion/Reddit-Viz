@@ -1,15 +1,35 @@
-import time, praw
+import time, praw, csv
 
+SUBREDDIT_FILE_NAME = "popular_subreddits.txt"
+DATA_FILE_NAME = "subreddit_activity_data.csv"
+USER_STRING = "/u/cogware reddit subscriber counter"
 
-class subreddit_stat_collector:
-	def __init__(fname=popular_subreddits.txt):
-		user_string = "/u/cogware reddit subscriber counter"
-		self.r = praw.Reddit(user_agent = user_string)
+class Subreddit_stat_collector:
+	# Uses a list of 100 popular subreddits from popular_subreddits.txt
+	# Every 5 mins, it queries Reddit to get active user count from each subreddit
+	# Records this info in a file "activity_data.csv"
+	# Time is an integer representation of UTC
+	def __init__():
+		self.r = praw.Reddit(user_agent = USER_STRING)
 
-		with open(fname) as f:
+		with open(SUBREDDIT_FILE_NAME, "r") as f:
 			subreddit_names = f.readlines()
+
 		self.subreddits = [r.get_subreddit(n) for n in subreddit_names]
-		
+		self.header_strings = "time," ++ ",".join(subreddit_names)
+
+		try:
+			with open(DATA_FILE_NAME, 'rb') as f:
+				reader = csv.reader(f)
+				data_headers = reader.next()
+				self.data = [row for row in reader]
+				assert data_headers == self.header_strings
+
+		except IOError:
+			print("No data found")
+			self.data = []
+
+	def get_active_users(subreddit):
 
 
 def jsonFromURL(url):
