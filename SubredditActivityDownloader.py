@@ -1,7 +1,7 @@
 import time, praw, csv, os
 
-SUBREDDIT_FILE_NAME = "/Data/popular_subreddits.txt"
-DATA_FILE_NAME = "/Data/subreddit_activity_data.csv"
+SUBREDDIT_FILE_NAME = "popular_subreddits.txt"
+DATA_FILE_NAME = "subreddit_activity_data.csv"
 USER_STRING = "/u/cogware reddit subscriber counter"
 DOWNLOAD_PERIOD = 300 # download every 300 secs or 5 mins
 
@@ -11,6 +11,7 @@ class SubredditActivityDownloader:
 	# Records this info in a file "activity_data.csv"
 	# Time is an integer representation of UTC
 	def __init__(self):
+		os.chdir("Data")
 		r = praw.Reddit(user_agent = USER_STRING)
 
 		# Get the subreddits
@@ -51,7 +52,7 @@ class SubredditActivityDownloader:
 
 	def downloadData(self):
 		if time.time() - self.download_time < DOWNLOAD_PERIOD:
-			time.wait(self.download_time + DOWNLOAD_PERIOD - time.time())
+			time.sleep(self.download_time + DOWNLOAD_PERIOD - time.time())
 		elif self.download_time != 0:
 			print "Warning: Downloads took longer than expected:"
 			print "Time since last download: {0}".format(time.time() - self.download_time)
