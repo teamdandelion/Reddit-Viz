@@ -1,51 +1,65 @@
-import time, praw, csv
+import time, praw, csv, os
 
 SUBREDDIT_FILE_NAME = "popular_subreddits.txt"
 DATA_FILE_NAME = "subreddit_activity_data.csv"
 USER_STRING = "/u/cogware reddit subscriber counter"
+DOWNLOAD_PERIOD = 300 # download every 300 secs or 5 mins
 
-class Subreddit_stat_collector:
 	# Uses a list of 100 popular subreddits from popular_subreddits.txt
 	# Every 5 mins, it queries Reddit to get active user count from each subreddit
 	# Records this info in a file "activity_data.csv"
 	# Time is an integer representation of UTC
-	def __init__():
-		self.r = praw.Reddit(user_agent = USER_STRING)
+r = praw.Reddit(user_agent = USER_STRING)
 
-		with open(SUBREDDIT_FILE_NAME, "r") as f:
-			subreddit_names = f.readlines()
+# Get the subreddits
+with open(SUBREDDIT_FILE_NAME, "r") as f:
+	subreddit_names = f.readlines()
 
-		self.subreddits = [r.get_subreddit(n) for n in subreddit_names]
-		self.header_strings = "time," ++ ",".join(subreddit_names)
+subreddit_names = [n.strip() for n in names]
 
-		try:
-			with open(DATA_FILE_NAME, 'rb') as f:
-				reader = csv.reader(f)
-				data_headers = reader.next()
-				self.data = [row for row in reader]
-				assert data_headers == self.header_strings
+subreddits = [r.get_subreddit(n) for n in subreddit_names]
+header_strings = ["time"] ++ subreddit_names
 
-		except IOError:
-			print("No data found")
-			self.data = []
+# Load the data
+try:
+	with open(DATA_FILE_NAME, 'rb') as f:
+		reader = csv.reader(f)
+		data_headers = reader.next()
+		data = [row for row in reader]
+		assert data_headers == header_strings
 
-	def get_active_users(subreddit):
+except IOError:
+	print "No data found"
+	data = [header_strings]
 
+except AssertionError as e:
+	print "Headers did not match expected! Indicates data file must have had different spec"
+	raise e 
 
-def jsonFromURL(url):
-	downloadedString = urllib2.urlopen(url).read()
-	data = json.loads(downloadedString)
-	return data
+# Start the data download cycle - this loops ad infinitum while prog runs
+download_time = 0
+data_cycles = 0
 
-def downloadSubreddit(subredditName):
-	# String -> {}
-	url = "http://www.reddit.com/r/" + subredditName + "/about.json"
-	return jsonFromURL(url)
+while True:
+	downloadData()
+	saveData()
 
-def subredditCounts(subredditName):
-	json = downloadSubreddit(subredditName)
-	data = json["data"]
-	nActive = data["accounts_active"]
-	nSubscribers = data["subscribers"]
-	return (nActive, nSubscribers)
+def downloadData():
+	if time.time() - download_time < DOWNLOAD_PERIOD:
+		wait(download_time + DOWNLOAD_PERIOD - time.time())
+	else:
+		print "Warning: Downloads took longer than expected:"
+		print "Time since last download: {0}".format(time.time() - download_time)
+	download_time = time.time()
 
+	newdata = [int(download_time)] ++ [sr.accounts_active for sr in subreddits]
+
+	data.append(newdata)
+	data_cycles += 1
+	print data_cycles
+
+def saveData():
+	with open(DATA_FILE_NAME+"_temp", "rb") as f:
+		writer = csv.writer(f)
+		writer.writerows(data)
+	os.rename(DATA_FILE_NAME + "_temp", DATA_FILE_NAME) 
