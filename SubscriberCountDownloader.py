@@ -3,7 +3,7 @@ import time, praw, csv, os
 SUBREDDIT_FILE_NAME = "/Data/popular_subreddits.txt"
 DATA_FILE_NAME = "/Data/subreddit_activity_data.csv"
 USER_STRING = "/u/cogware reddit subscriber counter"
-DOWNLOAD_PERIOD = 16 # download every 300 secs or 5 mins
+DOWNLOAD_PERIOD = 300 # download every 300 secs or 5 mins
 
 class SubredditActivityDownloader:
 	# Uses a list of 100 popular subreddits from popular_subreddits.txt
