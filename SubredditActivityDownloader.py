@@ -12,16 +12,16 @@ class SubredditActivityDownloader:
 	# Time is an integer representation of UTC
 	def __init__(self):
 		os.chdir("Data")
-		r = praw.Reddit(user_agent = USER_STRING)
+		self.r = praw.Reddit(user_agent = USER_STRING)
 
 		# Get the subreddits
 		with open(SUBREDDIT_FILE_NAME, "r") as f:
 			subreddit_names = f.readlines()
 
-		subreddit_names = [n.strip() for n in subreddit_names]
+		self.subreddit_names = [n.strip() for n in subreddit_names]
 
-		self.subreddits = [r.get_subreddit(n) for n in subreddit_names]
-		header_strings = ["time"] + subreddit_names
+		# self.subreddits = [r.get_subreddit(n) for n in subreddit_names]
+		header_strings = ["time"] + self.subreddit_names
 
 		# Load the data
 		try:
@@ -58,7 +58,9 @@ class SubredditActivityDownloader:
 			print "Time since last download: {0}".format(time.time() - self.download_time)
 		self.download_time = time.time()
 
-		newdata = [int(self.download_time)] + [sr.accounts_active for sr in self.subreddits]
+		newactive = [self.r.get_subreddit(sr).accounts_active for sr in self.subreddit_names]
+
+		newdata = [int(self.download_time)] + newactive
 
 		self.data.append(newdata)
 		self.data_cycles += 1
@@ -67,7 +69,6 @@ class SubredditActivityDownloader:
 	def saveData(self):
 		with open(DATA_FILE_NAME+"_temp", "wb") as f:
 			writer = csv.writer(f)
-			print self.data
 			writer.writerows(self.data)
 		os.rename(DATA_FILE_NAME + "_temp", DATA_FILE_NAME) 
 
